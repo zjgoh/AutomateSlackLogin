@@ -1,0 +1,8 @@
+# Slack auto-login - install before first run:
+#   pip install -r requirements.txt
+
+selenium>=4.15.0
+webdriver-manager>=4.0.1
+python-dotenv>=1.0.0
+pyotp>=2.9.0
+pyautogui>=0.9.50
