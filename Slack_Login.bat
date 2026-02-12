@@ -18,12 +18,19 @@ if exist "%ProgramFiles%\Python313\python.exe" set "PY=%ProgramFiles%\Python313\
 goto :nopython
 
 :found
+:: If all deps already installed, skip pip steps to speed up
+%PY% -c "import selenium, webdriver_manager, dotenv" >nul 2>&1
+if not errorlevel 1 (
+    echo [1/2] Dependencies already installed. Starting Slack auto-login...
+    goto :run
+)
+
 echo [1/4] Checking for latest pip...
 %PY% -m pip install --upgrade pip
 if errorlevel 1 echo      pip upgrade failed (non-fatal, continuing).
 echo.
 
-echo [2/4] Installing/updating dependencies...
+echo [2/4] Installing dependencies...
 %PY% -m pip install -r "%~dp0library\requirements.txt"
 if errorlevel 1 (
     echo      pip install failed.
@@ -32,10 +39,12 @@ if errorlevel 1 (
 
 echo.
 echo [3/4] Starting Slack auto-login...
+
+:run
 echo.
 %PY% "%~dp0library\slack_auto_login.py"
 echo.
-echo [4/4] Done.
+echo Done.
 goto :end
 
 :nopython
@@ -50,4 +59,7 @@ start "Slack Login" cmd /k "cd /d "%~dp0" && "%~f0""
 exit /b 0
 
 :end
-pause
+echo.
+echo Closing in 2 seconds...
+timeout /t 2 /nobreak >nul
+exit

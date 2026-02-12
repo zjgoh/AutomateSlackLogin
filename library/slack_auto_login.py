@@ -87,10 +87,52 @@ def get_chrome_options() -> Options:
     return opts
 
 
+def _chromedriver_cache_path():
+    """Path to file where we cache the ChromeDriver executable path."""
+    return os.path.join(_PROJECT_ROOT, ".chromedriver_path")
+
+
+def _get_cached_driver_path():
+    """Return cached ChromeDriver path if file exists and the exe exists."""
+    cache_file = _chromedriver_cache_path()
+    if not os.path.isfile(cache_file):
+        return None
+    try:
+        with open(cache_file, "r", encoding="utf-8") as f:
+            path = (f.read() or "").strip()
+        if path and os.path.isfile(path):
+            return path
+    except Exception:
+        pass
+    return None
+
+
+def _save_driver_path(path: str) -> None:
+    """Save ChromeDriver path to cache file."""
+    cache_file = _chromedriver_cache_path()
+    try:
+        with open(cache_file, "w", encoding="utf-8") as f:
+            f.write(path)
+    except Exception:
+        pass
+
+
 def create_driver():
-    """Create Chrome WebDriver with correct driver for current Chrome version."""
+    """Create Chrome WebDriver. Use cached driver if it exists and works; else download and cache."""
     opts = get_chrome_options()
-    service = Service(ChromeDriverManager().install())
+    driver_path = _get_cached_driver_path()
+    if driver_path:
+        try:
+            service = Service(driver_path)
+            driver = webdriver.Chrome(service=service, options=opts)
+            driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
+            return driver
+        except Exception:
+            pass  # Cached driver invalid (e.g. Chrome updated); fall back to download
+    print("ChromeDriver not cached or outdated; downloading...")
+    path = ChromeDriverManager().install()
+    _save_driver_path(path)
+    service = Service(path)
     driver = webdriver.Chrome(service=service, options=opts)
     driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
     return driver
@@ -130,7 +172,7 @@ def _click_sign_in_with_password(driver, wait):
                 f"//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{substring}')] | //button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{substring}')] | //span[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{substring}')]/ancestor::a[1]"
             )
             link.click()
-            time.sleep(1.0)
+            time.sleep(0.8)
             return True
         except Exception:
             continue
@@ -385,14 +427,14 @@ def _do_refresh(driver):
         pass
 
 
-def _open_slack_via_keys(driver, times: int = 3):
+def _open_slack_via_keys(driver, times: int = 6):
     """After 2FA: send Right+Enter (Open Slack), refresh, wait for load; repeat until Slack desktop opens."""
     wait = WebDriverWait(driver, 12)
     for i in range(times):
-        time.sleep(0.45 if i == 0 else 0.2)
+        time.sleep(0.4 if i == 0 else 0.3)
         print(f"Open Slack attempt {i + 1}/{times}...")
         _click_open_slack_popup(driver, wait)
-        time.sleep(0.25)
+        time.sleep(0.3)
         _do_refresh(driver)
         time.sleep(0.25)  # wait for page to load / "Open Slack?" dialog to appear again
 
