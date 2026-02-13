@@ -427,7 +427,7 @@ def _do_refresh(driver):
         pass
 
 
-def _open_slack_via_keys(driver, times: int = 6):
+def _open_slack_via_keys(driver, times: int = 5):
     """After 2FA: send Right+Enter (Open Slack), refresh, wait for load; repeat until Slack desktop opens."""
     wait = WebDriverWait(driver, 12)
     for i in range(times):

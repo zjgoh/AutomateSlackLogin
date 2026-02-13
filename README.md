@@ -17,17 +17,17 @@ Automate signing in to Slack (e.g. after daily session timeout). Uses Selenium w
    Double‑click **Slack_Login.bat**. It runs everything step by step:
    - **Check if Python exists** (looks for `python`, `py`, or Python in standard install folders).
    - **If Python is not installed:** runs `library\Install_Python.bat` to install Python 3.12 via winget, then **automatically relaunches** Slack_Login in a new window so the rest runs without you doing anything else.
-   - **If Python is found:** upgrades pip → installs dependencies → runs the Slack auto-login script.
+   - **If Python is found:** creates an **isolated environment** in a `.venv` folder inside the project (if it doesn’t exist), installs all dependencies **into that folder** (not into Windows system Python), then runs the Slack auto-login script.
 
-   You only need to run **Slack_Login.bat** once; no need to rerun manually after Python is installed.
+   All required packages (selenium, webdriver-manager, etc.) live only in the project’s `.venv`, so your system Python stays unchanged. You only need to run **Slack_Login.bat** once; no need to rerun manually after Python is installed.
 
 3. **Manual run (optional)**  
-   If you prefer to run from a terminal:
+   If you prefer to run from a terminal using the project’s isolated environment:
    ```powershell
-   pip install -r library\requirements.txt
-   python library\slack_auto_login.py
+   .venv\Scripts\pip install -r library\requirements.txt
+   .venv\Scripts\python library\slack_auto_login.py
    ```
-   If `python` is not in your PATH, use `py -3` instead of `python`.
+   Or with system Python: `pip install -r library\requirements.txt` then `python library\slack_auto_login.py` (if `python` is in PATH; otherwise use `py -3`).
 
 4. **2FA**  
    If `SLACK_TOTP_SECRET` is set, the script generates the current 6‑digit code and fills it in. If not set, the script waits and you can enter the code manually.

@@ -9,7 +9,7 @@ echo Slack Auto Runner
 echo =====================================
 
 set "FLAGFILE=ran_today.flag"
-set "TARGET=Slack_Login.bat"
+set "TARGET=%~dp0Slack_Login.bat"
 
 :: Get stable date (yyyyMMdd)
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set TODAY=%%i
@@ -57,7 +57,7 @@ if !currentMinutes! GEQ !startMinutes! if !currentMinutes! LEQ !endMinutes! (
 
     echo Running Slack_Login...
     
-    :: Run in separate cmd so it cannot kill parent
+    :: Run Slack_Login.bat by full path (same folder as this script)
     cmd /c "%TARGET%"
 
     echo Done.
