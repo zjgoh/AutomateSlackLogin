@@ -56,6 +56,7 @@ SLACK_TOTP_SECRET = os.getenv("SLACK_TOTP_SECRET", "").strip().replace(" ", "").
 SLACK_SIGNIN_URL = os.getenv("SLACK_SIGNIN_URL", "").strip()
 HEADLESS = os.getenv("HEADLESS", "false").strip().lower() in ("true", "1", "yes")
 TWOFA_WAIT_SECONDS = int(os.getenv("TWOFA_WAIT_SECONDS", "120").strip())
+SLACK_TRY_COUNT = int(os.getenv("SLACK_TRY_COUNT", "3").strip())
 
 # Timeouts
 PAGE_LOAD_TIMEOUT = 30
@@ -427,8 +428,10 @@ def _do_refresh(driver):
         pass
 
 
-def _open_slack_via_keys(driver, times: int = 5):
+def _open_slack_via_keys(driver, times: int | None = None):
     """After 2FA: send Right+Enter (Open Slack), refresh, wait for load; repeat until Slack desktop opens."""
+    if times is None:
+        times = SLACK_TRY_COUNT
     wait = WebDriverWait(driver, 12)
     for i in range(times):
         time.sleep(0.4 if i == 0 else 0.3)
